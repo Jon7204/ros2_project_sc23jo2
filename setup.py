@@ -20,10 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'first_step = lab5.first_step:main',
-            'second_step = lab5.second_step:main',
-            'third_step = lab5.third_step:main',
-            'fourth_step = lab5.fourth_step:main',
+            'explore = ros2_project_sc23jo2.go_to_specific_points_on_map:main',
         ],
     },
 )
