@@ -81,25 +81,39 @@ class Detect_RGB(Node):
         if len(contours) > 0:
             c = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(c)
+
             if area > 100:
                 (x,y), radius = cv2.minEnclosingCircle(c)
                 center = (int(x), int(y))
                 radius = int(radius)
                 cv2.circle(image, center, radius, (255,0,0), 2)
+
                 self.get_logger().info("Blue detected")
-                msg = Bool()
-                msg.data = True
-                self.blue_pub.publish(msg)
-                twist = Twist()
+                M = cv2.moments(c)
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
 
-                if area > 300000: # Equates to 1 grid square from box which is equal to 1m
-                    twist.linear.x = 0.0
-                    self.get_logger().info("Reached blue box")
-                else:
-                    # move forward
-                    twist.linear.x = 0.2
+                    cv2.circle(image, (cx, cy), 5, (255,255,255), -1)
+                    image_center = image.shape[1] / 2
+                    twist = Twist()
 
-                self.publisher.publish(twist)
+                    if area > 300000: # Equates to 1 grid away
+                        twist.linear.x = 0.0
+                        twist.angular.z = 0.0
+                        self.get_logger().info("Reached blue box")
+                    else:
+                        if cx < image_center - 80:
+                            # turn left
+                            twist.angular.z = 0.1
+                        elif cx > image_center + 80:
+                            # turn right
+                            twist.angular.z = -0.1
+                        else:
+                            # go straight
+                            twist.linear.x = 0.3
+                            twist.angular.z = 0.0
+                    self.publisher.publish(twist)
 
 
 def main(args=None):
