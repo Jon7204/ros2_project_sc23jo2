@@ -9,6 +9,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from rclpy.exceptions import ROSInterruptException
 import signal
+from std_msgs.msg import Bool
 
 
 class Detect_RGB(Node):
@@ -21,6 +22,8 @@ class Detect_RGB(Node):
         # Subscribe to camera
         self.subscription = self.create_subscription( Image, '/camera/image_raw', self.callback, 10)
         self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.blue_pub = self.create_publisher(Bool, '/blue_detected', 10)
+
         self.sensitivity = 10
         self.too_close = False
 
@@ -71,7 +74,7 @@ class Detect_RGB(Node):
                 radius = int(radius)
                 cv2.circle(image, center, radius, draw_colour, 2)
                 self.get_logger().info(f"{name} detected")
-        
+    
 
     def detect_blue(self, mask, image):
         contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -84,10 +87,12 @@ class Detect_RGB(Node):
                 radius = int(radius)
                 cv2.circle(image, center, radius, (255,0,0), 2)
                 self.get_logger().info("Blue detected")
+                msg = Bool()
+                msg.data = True
+                self.blue_pub.publish(msg)
                 twist = Twist()
 
-                if area > 30000:
-                    # close enough
+                if area > 300000: # Equates to 1 grid square from box which is equal to 1m
                     twist.linear.x = 0.0
                     self.get_logger().info("Reached blue box")
                 else:

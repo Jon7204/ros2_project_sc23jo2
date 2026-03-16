@@ -3,6 +3,7 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 from nav2_msgs.action import NavigateToPose
 from math import sin, cos
+from std_msgs.msg import Bool
 
 
 class GoToPose(Node):
@@ -13,13 +14,16 @@ class GoToPose(Node):
 
         # Waypoints to explore
         self.waypoints = [
-            (2.0, 1.0, 0.0),
             (-1.0, -4.5, 0.0),
-            (2.5, -11.0, 0.0),
-            (6.0, -10.0, 0.0)
+            (-2.0, -4.0, 0.0),
+            (2.0, -5.5, 0.0),
+            (2.9, -8.5, 0.0),
+            (1.5, -9.2, 0.0)
         ]
 
         self.current_goal = 0
+        self.blue_found = False
+        self.blue_sub = self.create_subscription(Bool, '/blue_detected', self.blue_callback, 10)
 
     def send_goal(self, x, y, yaw):
         goal_msg = NavigateToPose.Goal()
@@ -59,10 +63,15 @@ class GoToPose(Node):
             self.send_goal(x, y, yaw)
         else:
             self.get_logger().info('Exploration finished')
-
+    
     def feedback_callback(self, feedback_msg):
         pass
 
+    def blue_callback(self, msg):
+        if msg.data:
+            self.blue_found = True
+            self.get_logger().info("Blue box detected! Stopping exploration.")
+            rclpy.shutdown()
 
 def main(args=None):
     rclpy.init(args=args)
