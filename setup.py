@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'explore = ros2_project_sc23jo2.go_to_specific_points_on_map:main',
+            'detect_rgb = ros2_project_sc23jo2.detect_RGB:main',
         ],
     },
 )
