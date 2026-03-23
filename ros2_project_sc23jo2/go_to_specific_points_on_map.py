@@ -27,9 +27,6 @@ class GoToPose(Node):
         self.goal_handle = None
 
     def send_goal(self, x, y, yaw):
-        if self.blue_found:
-            self.get_logger().info("Exploration stopped. Not sending new goals.")
-            return
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose.header.frame_id = 'map'
         goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
@@ -59,10 +56,6 @@ class GoToPose(Node):
         self.get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
-        if self.blue_found:
-            self.get_logger().info("Exploration stopped. Ignoring result.")
-            return
-
         self.get_logger().info('Goal Reached')
         self.current_goal += 1
 
