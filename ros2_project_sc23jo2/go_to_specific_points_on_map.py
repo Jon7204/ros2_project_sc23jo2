@@ -26,6 +26,9 @@ class GoToPose(Node):
         self.blue_sub = self.create_subscription(Bool, '/blue_detected', self.blue_callback, 10)
 
     def send_goal(self, x, y, yaw):
+        if self.blue_found:
+            self.get_logger().info("Exploration stopped. Not sending new goals.")
+            return
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose.header.frame_id = 'map'
         goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
@@ -54,8 +57,11 @@ class GoToPose(Node):
         self.get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
+        if self.blue_found:
+            self.get_logger().info("Exploration stopped. Ignoring result.")
+            return
+
         self.get_logger().info('Goal Reached')
-        # Move to next waypoint
         self.current_goal += 1
 
         if self.current_goal < len(self.waypoints):
@@ -70,8 +76,12 @@ class GoToPose(Node):
     def blue_callback(self, msg):
         if msg.data:
             self.blue_found = True
-            self.get_logger().info("Blue box detected! Stopping exploration.")
-            return
+            self.get_logger().info("Blue box detected. Stopping exploration.")
+
+            try:
+                self.send_goal_future.cancel()
+            except:
+                pass
 
 def main(args=None):
     rclpy.init(args=args)
