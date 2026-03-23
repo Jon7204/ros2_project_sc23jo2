@@ -24,6 +24,7 @@ class GoToPose(Node):
         self.current_goal = 0
         self.blue_found = False
         self.blue_sub = self.create_subscription(Bool, '/blue_detected', self.blue_callback, 10)
+        self.goal_handle = None
 
     def send_goal(self, x, y, yaw):
         if self.blue_found:
@@ -48,6 +49,7 @@ class GoToPose(Node):
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
+        self.goal_handle = goal_handle
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected')
             return
@@ -78,10 +80,8 @@ class GoToPose(Node):
             self.blue_found = True
             self.get_logger().info("Blue box detected. Stopping exploration.")
 
-            try:
-                self.send_goal_future.cancel()
-            except:
-                pass
+            if self.goal_handle is not None:
+                self.goal_handle.cancel_goal_async()
 
 def main(args=None):
     rclpy.init(args=args)
