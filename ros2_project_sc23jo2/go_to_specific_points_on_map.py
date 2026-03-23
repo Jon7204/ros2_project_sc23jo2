@@ -71,7 +71,7 @@ class GoToPose(Node):
         if msg.data:
             self.blue_found = True
             self.get_logger().info("Blue box detected! Stopping exploration.")
-            rclpy.shutdown()
+            return
 
 def main(args=None):
     rclpy.init(args=args)
