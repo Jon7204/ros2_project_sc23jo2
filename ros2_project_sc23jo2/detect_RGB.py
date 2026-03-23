@@ -84,6 +84,12 @@ class Detect_RGB(Node):
             area = cv2.contourArea(c)
 
             if area > 100:
+                if self.reached_blue:
+                    twist = Twist()
+                    self.publisher.publish(twist)
+                    return
+
+
                 (x,y), radius = cv2.minEnclosingCircle(c)
                 center = (int(x), int(y))
                 radius = int(radius)
@@ -105,10 +111,11 @@ class Detect_RGB(Node):
                     twist = Twist()
 
                     if area > 300000: # Equates to 1 grid away
-                        twist.linear.x = 0.0
-                        twist.angular.z = 0.0
                         self.get_logger().info("Reached blue box")
-                        rclpy.shutdown()
+                        twist = Twist()
+                        self.publisher.publish(twist)
+                        self.reached_blue = True
+                        return
                     else:
                         twist.linear.x = 0.15
                         twist.angular.z = -0.002 * error
